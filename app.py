@@ -103,6 +103,8 @@ def perform_login():
         from selenium.webdriver.common.by import By
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
+        from selenium.webdriver.chrome.service import Service
+        from webdriver_manager.chrome import ChromeDriverManager
         
         # Setup Chrome options for Render.com
         options = webdriver.ChromeOptions()
@@ -114,7 +116,9 @@ def perform_login():
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.page_load_strategy = 'eager'
         
-        driver = webdriver.Chrome(options=options)
+        # Use webdriver-manager to automatically install ChromeDriver
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
         wait = WebDriverWait(driver, 10)
         
         # Navigate to login page
