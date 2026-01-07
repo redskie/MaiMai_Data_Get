@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+.webassets-cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Credentials
+.env
+cookies.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Selenium
+chromedriver
+geckodriver
