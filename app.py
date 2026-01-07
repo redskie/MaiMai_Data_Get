@@ -23,8 +23,8 @@ last_login_time = None
 login_lock = threading.Lock()
 
 # Load credentials from environment variables
-SEGA_ID = os.environ.get('trid001')
-PASSWORD = os.environ.get('104625140040Aaa')
+SEGA_ID = os.environ.get('SEGA_ID')
+PASSWORD = os.environ.get('PASSWORD')
 
 def load_cookies():
     """Load cookies from file"""
