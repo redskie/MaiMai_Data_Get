@@ -93,89 +93,91 @@ def check_session_valid():
         return False
 
 def perform_login():
-    """Perform automated login using Selenium"""
+    """Perform automated login using pure requests (no browser needed)"""
     global last_login_time
     
-    print("Starting automated login...")
+    print("Starting automated login with requests...")
     
     try:
-        from selenium import webdriver
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        from selenium.webdriver.chrome.service import Service
-        from webdriver_manager.chrome import ChromeDriverManager
+        # Create session to persist cookies
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        })
         
-        # Setup Chrome options for Render.com
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-blink-features=AutomationControlled')
-        options.page_load_strategy = 'eager'
+        # Step 1: Get login page
+        print("[1/3] Fetching login page...")
+        login_params = {
+            'site_id': 'maimaidxex',
+            'redirect_url': 'https://maimaidx-eng.com/maimai-mobile/',
+            'back_url': 'https://maimai.sega.com/'
+        }
         
-        # Use webdriver-manager to automatically install ChromeDriver
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
-        wait = WebDriverWait(driver, 10)
+        initial_response = session.get(
+            'https://lng-tgk-aime-gw.am-all.net/common_auth/login',
+            params=login_params,
+            timeout=15
+        )
         
-        # Navigate to login page
-        login_url = "https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=maimaidxex&redirect_url=https://maimaidx-eng.com/maimai-mobile/&back_url=https://maimai.sega.com/"
-        driver.get(login_url)
-        time.sleep(1.5)
+        if initial_response.status_code != 200:
+            print(f"Failed to fetch login page: {initial_response.status_code}")
+            return False
         
-        # Click SEGA ID button
-        try:
-            sega_button = wait.until(EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "span.c-button--openid--segaId")
-            ))
-            sega_button.click()
-            time.sleep(0.8)
-        except:
-            pass
+        # Step 2: Parse form and submit credentials
+        print("[2/3] Submitting credentials...")
+        soup = BeautifulSoup(initial_response.text, 'html.parser')
+        form = soup.find('form')
         
-        # Enter credentials
-        sega_id_input = wait.until(EC.presence_of_element_located((By.ID, "sid")))
-        sega_id_input.send_keys(SEGA_ID)
+        if not form:
+            print("Could not find login form")
+            return False
         
-        password_input = wait.until(EC.presence_of_element_located((By.ID, "password")))
-        password_input.send_keys(PASSWORD)
+        login_data = {
+            'retention': '1',
+            'sid': SEGA_ID,
+            'password': PASSWORD
+        }
         
-        # Check terms checkbox
-        try:
-            checkboxes = driver.find_elements(By.ID, "agree")
-            for checkbox in checkboxes:
-                if checkbox.is_displayed() and not checkbox.is_selected():
-                    driver.execute_script("arguments[0].click();", checkbox)
-                    break
-        except:
-            pass
+        form_action = form.get('action', '/common_auth/login/sid/')
+        if not form_action.startswith('http'):
+            form_action = 'https://lng-tgk-aime-gw.am-all.net' + form_action
         
-        # Click login button
-        login_button = wait.until(EC.element_to_be_clickable((By.ID, "btnSubmit")))
-        login_button.click()
-        time.sleep(2.5)
+        login_response = session.post(
+            form_action,
+            data=login_data,
+            allow_redirects=True,
+            timeout=15
+        )
         
-        # Check if login successful
-        current_url = driver.current_url
-        if "maimaidx-eng.com" in current_url:
-            # Save cookies
-            cookies = driver.get_cookies()
-            cookie_dict = {}
-            for cookie in cookies:
-                cookie_dict[cookie['name']] = cookie['value']
+        # Step 3: Check if login successful
+        print("[3/3] Verifying login...")
+        if 'maimaidx-eng.com' in login_response.url:
+            print("Login successful - reached MaiMai site!")
             
-            save_cookies(cookie_dict)
+            # Extract and save cookies
+            cookie_list = []
+            for cookie in session.cookies:
+                cookie_list.append({
+                    'name': cookie.name,
+                    'value': cookie.value,
+                    'domain': cookie.domain,
+                    'path': cookie.path if cookie.path else '/',
+                    'secure': cookie.secure if hasattr(cookie, 'secure') else False,
+                    'httpOnly': cookie.has_nonstandard_attr('HttpOnly') if hasattr(cookie, 'has_nonstandard_attr') else False
+                })
+            
+            save_cookies(cookie_list)
             last_login_time = datetime.now()
             
-            driver.quit()
-            print("Login successful!")
+            print(f"Saved {len(cookie_list)} cookies")
             return True
         else:
-            driver.quit()
-            print("Login failed - wrong URL")
+            print(f"Login failed - ended at: {login_response.url}")
             return False
             
     except Exception as e:
