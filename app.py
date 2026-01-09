@@ -270,9 +270,22 @@ def get_player_data(friend_code):
         trophy_element = soup.find('div', class_=lambda x: x and 'trophy_block' in x)
         trophy = trophy_element.text.strip() if trophy_element else None
         
-        # Extract player icon URL (if needed)
-        icon_element = soup.find('img', class_='w_112')
-        icon_url = icon_element.get('src') if icon_element else None
+        # Extract player icon/avatar URL - handle multiple classes and different patterns
+        icon_element = (
+            soup.find('img', class_=lambda x: x and 'w_112' in x) or  # class="w_112 f_l"
+            soup.find('img', class_='w_112') or  # exact class
+            soup.find('img', src=lambda x: x and 'Icon/' in x)  # any img with Icon/ in src
+        )
+        icon_url = None
+        if icon_element and icon_element.get('src'):
+            src = icon_element.get('src')
+            # Ensure full URL
+            if src.startswith('http'):
+                icon_url = src
+            elif src.startswith('/'):
+                icon_url = f"https://maimaidx-eng.com{src}"
+            else:
+                icon_url = f"https://maimaidx-eng.com/maimai-mobile/{src}"
         
         if not player_name:
             return {
@@ -286,7 +299,7 @@ def get_player_data(friend_code):
             "ign": player_name,
             "rating": rating,
             "trophy": trophy,
-            "icon_url": f"https://maimaidx-eng.com{icon_url}" if icon_url and not icon_url.startswith('http') else icon_url
+            "avatar_url": icon_url
         }
         
     except Exception as e:
@@ -306,7 +319,7 @@ def home():
             "get_player": {
                 "method": "GET",
                 "path": "/api/player/<friend_code>",
-                "description": "Get player IGN, rating, trophy, and icon",
+                "description": "Get player IGN, rating, trophy, and avatar",
                 "example": "/api/player/101680566000997"
             },
             "batch_request": {
@@ -327,7 +340,7 @@ def home():
             "ign": "string (player name)",
             "rating": "string (player rating)",
             "trophy": "string (player trophy/title)",
-            "icon_url": "string (player icon URL)"
+            "avatar_url": "string (player avatar/profile picture URL)"
         },
         "documentation": "https://github.com/redskie/MaiMai_Data_Get/blob/main/API_INTEGRATION.md"
     })

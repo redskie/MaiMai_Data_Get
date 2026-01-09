@@ -52,6 +52,7 @@ def test_request(friend_code):
                 print(f"👤 Player Name (IGN): {data.get('ign')}")
                 print(f"⭐ Rating: {data.get('rating')}")
                 print(f"🏆 Trophy: {data.get('trophy', 'None')}")
+                print(f"🖼️  Avatar: {data.get('avatar_url', 'None')}")
                 print("="*60)
             else:
                 print("\n" + "="*60)
