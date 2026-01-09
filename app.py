@@ -318,7 +318,6 @@ def health():
         "session_valid": session_valid,
         "last_login": last_login_time.isoformat() if last_login_time else None,
         "uptime": "operational"
-```
     })
 
 @app.route('/api/login', methods=['POST'])
