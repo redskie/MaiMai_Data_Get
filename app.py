@@ -54,8 +54,15 @@ def load_cookies():
         return None
 
 def save_cookies(cookies):
-    """Save cookies to file"""
+    """Save cookies to file - handles both dict and list formats"""
     try:
+        # If already a list, save directly
+        if isinstance(cookies, list):
+            with open(COOKIE_FILE, 'w') as f:
+                json.dump(cookies, f, indent=2)
+            return True
+        
+        # If dict, convert to list format
         cookie_list = []
         for name, value in cookies.items():
             cookie_list.append({
