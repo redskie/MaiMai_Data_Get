@@ -42,14 +42,16 @@ def test_request(friend_code):
         
         try:
             data = response.json()
-            print(json.dumps(data, indent=2))
+            # Print JSON with ensure_ascii=False to show Unicode properly
+            print(json.dumps(data, indent=2, ensure_ascii=False))
             
             # Pretty print if successful
             if data.get('success'):
                 print("\n" + "="*60)
                 print("✅ SUCCESS!")
-                print(f"👤 Player Name: {data.get('name')}")
+                print(f"👤 Player Name (IGN): {data.get('ign')}")
                 print(f"⭐ Rating: {data.get('rating')}")
+                print(f"🏆 Trophy: {data.get('trophy', 'None')}")
                 print("="*60)
             else:
                 print("\n" + "="*60)
