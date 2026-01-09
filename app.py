@@ -254,16 +254,16 @@ def get_player_data(friend_code):
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Extract player name (IGN)
-        name_element = soup.find('div', class_='name_block')
+        # Extract player name (IGN) - handle multiple classes
+        name_element = soup.find('div', class_=lambda x: x and 'name_block' in x)
         player_name = name_element.text.strip() if name_element else None
         
-        # Extract rating
-        rating_element = soup.find('div', class_='rating_block')
+        # Extract rating - handle multiple classes
+        rating_element = soup.find('div', class_=lambda x: x and 'rating_block' in x)
         rating = rating_element.text.strip() if rating_element else None
         
-        # Extract trophy name (player title/trophy)
-        trophy_element = soup.find('div', class_='trophy_block')
+        # Extract trophy name (player title/trophy) - handle multiple classes
+        trophy_element = soup.find('div', class_=lambda x: x and 'trophy_block' in x)
         trophy = trophy_element.text.strip() if trophy_element else None
         
         # Extract player icon URL (if needed)
