@@ -26,6 +26,13 @@ login_lock = threading.Lock()
 SEGA_ID = os.environ.get('SEGA_ID')
 PASSWORD = os.environ.get('PASSWORD')
 
+# Log startup info
+print("="*60)
+print("MaiMai API Server Starting...")
+print(f"SEGA_ID configured: {'Yes' if SEGA_ID else 'No'}")
+print(f"PASSWORD configured: {'Yes' if PASSWORD else 'No'}")
+print("="*60)
+
 def load_cookies():
     """Load cookies from file"""
     if not os.path.exists(COOKIE_FILE):
@@ -97,6 +104,10 @@ def perform_login():
     global last_login_time
     
     print("Starting automated login with requests...")
+    
+    if not SEGA_ID or not PASSWORD:
+        print("ERROR: SEGA_ID or PASSWORD not configured in environment variables!")
+        return False
     
     try:
         # Create session to persist cookies
@@ -201,7 +212,8 @@ def get_player_data(friend_code):
     """Fetch player data from MaiMai - Returns IGN, Rating, and Trophy"""
     cookies = load_cookies()
     if not cookies:
-        return {"success": False, "error": "No session available"}
+        print(f"ERROR: No cookies available. SEGA_ID={SEGA_ID is not None}, PASSWORD={PASSWORD is not None}")
+        return {"success": False, "error": "No session available (cookies not found)"}
     
     url = f"https://maimaidx-eng.com/maimai-mobile/friend/search/searchUser/?friendCode={friend_code}"
     
