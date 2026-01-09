@@ -198,7 +198,7 @@ def ensure_logged_in():
         return perform_login()
 
 def get_player_data(friend_code):
-    """Fetch player data from MaiMai"""
+    """Fetch player data from MaiMai - Returns IGN, Rating, and Trophy"""
     cookies = load_cookies()
     if not cookies:
         return {"success": False, "error": "No session available"}
@@ -212,8 +212,18 @@ def get_player_data(friend_code):
         'Accept-Language': 'en-US,en;q=0.9',
     })
     
-    for name, value in cookies.items():
-        session.cookies.set(name, value, domain='.maimaidx-eng.com', path='/')
+    # Set cookies from both stored cookie formats
+    if isinstance(cookies, list):
+        for cookie in cookies:
+            session.cookies.set(
+                cookie['name'],
+                cookie['value'],
+                domain=cookie.get('domain', '.maimaidx-eng.com'),
+                path=cookie.get('path', '/')
+            )
+    else:
+        for name, value in cookies.items():
+            session.cookies.set(name, value, domain='.maimaidx-eng.com', path='/')
     
     try:
         response = session.get(url, timeout=10, allow_redirects=True)
@@ -225,17 +235,35 @@ def get_player_data(friend_code):
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
+        # Extract player name (IGN)
         name_element = soup.find('div', class_='name_block')
-        player_name = name_element.text.strip() if name_element else "Unknown"
+        player_name = name_element.text.strip() if name_element else None
         
+        # Extract rating
         rating_element = soup.find('div', class_='rating_block')
-        rating = rating_element.text.strip() if rating_element else "N/A"
+        rating = rating_element.text.strip() if rating_element else None
+        
+        # Extract trophy name (player title/trophy)
+        trophy_element = soup.find('div', class_='trophy_block')
+        trophy = trophy_element.text.strip() if trophy_element else None
+        
+        # Extract player icon URL (if needed)
+        icon_element = soup.find('img', class_='w_112')
+        icon_url = icon_element.get('src') if icon_element else None
+        
+        if not player_name:
+            return {
+                "success": False,
+                "error": "Player not found or invalid friend code"
+            }
         
         return {
             "success": True,
             "friend_code": friend_code,
-            "name": player_name,
-            "rating": rating
+            "ign": player_name,
+            "rating": rating,
+            "trophy": trophy,
+            "icon_url": f"https://maimaidx-eng.com{icon_url}" if icon_url and not icon_url.startswith('http') else icon_url
         }
         
     except Exception as e:
@@ -245,16 +273,40 @@ def get_player_data(friend_code):
 
 @app.route('/')
 def home():
-    """Health check endpoint"""
+    """API documentation endpoint"""
     return jsonify({
+        "service": "MaiMai DX Player Data API",
+        "version": "2.0.0",
         "status": "online",
-        "service": "MaiMai Player Data API",
-        "version": "1.0.0",
+        "description": "Fetch MaiMai DX player data using friend codes",
         "endpoints": {
-            "player_data": "/api/player/<friend_code>",
-            "health": "/health",
-            "login": "/api/login"
-        }
+            "get_player": {
+                "method": "GET",
+                "path": "/api/player/<friend_code>",
+                "description": "Get player IGN, rating, trophy, and icon",
+                "example": "/api/player/101680566000997"
+            },
+            "batch_request": {
+                "method": "POST",
+                "path": "/api/batch",
+                "description": "Get data for multiple players (max 10)",
+                "example": {"friend_codes": ["101680566000997", "101232330856982"]}
+            },
+            "health": {
+                "method": "GET",
+                "path": "/health",
+                "description": "Check API health and session status"
+            }
+        },
+        "response_format": {
+            "success": True,
+            "friend_code": "string",
+            "ign": "string (player name)",
+            "rating": "string (player rating)",
+            "trophy": "string (player trophy/title)",
+            "icon_url": "string (player icon URL)"
+        },
+        "documentation": "https://github.com/redskie/MaiMai_Data_Get/blob/main/API_INTEGRATION.md"
     })
 
 @app.route('/health')
@@ -264,7 +316,9 @@ def health():
     return jsonify({
         "status": "healthy",
         "session_valid": session_valid,
-        "last_login": last_login_time.isoformat() if last_login_time else None
+        "last_login": last_login_time.isoformat() if last_login_time else None,
+        "uptime": "operational"
+```
     })
 
 @app.route('/api/login', methods=['POST'])

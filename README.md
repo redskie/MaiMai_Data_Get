@@ -1,59 +1,95 @@
-# MaiMai DX Player Data Fetcher
+# MaiMai DX Player Data API
 
-Automation tool to fetch player data from the MaiMai DX website using friend codes.
+🎮 A lightweight REST API to fetch MaiMai DX player data (IGN, rating, trophy, icon) using friend codes.
 
-## Setup
+## 🚀 Live API
 
-1. Install required packages:
+**Base URL:** `https://maimai-data-get.onrender.com`
+
+## ✨ Features
+
+- ✅ **No browser required** - Pure Python requests
+- ✅ **Fast & lightweight** - 2-5 second response time
+- ✅ **Batch requests** - Fetch up to 10 players at once
+- ✅ **CORS enabled** - Use from any frontend
+- ✅ **Auto-retry** - Handles session expiration automatically
+- ✅ **Free hosting** - Works on any platform
+
+## 📡 Quick Start
+
 ```bash
-pip install requests beautifulsoup4 selenium
+# Get player data
+curl https://maimai-data-get.onrender.com/api/player/101680566000997
+
+# Response
+{
+  "success": true,
+  "friend_code": "101680566000997",
+  "ign": "PlayerName",
+  "rating": "15248",
+  "trophy": "maimai Master",
+  "icon_url": "https://..."
+}
 ```
 
-## Usage
+## 📚 Documentation
 
-### Step 1: Login and Save Session
+**Complete integration guide:** [API_INTEGRATION.md](API_INTEGRATION.md)
 
-Run the automated login script:
+Includes:
+- Detailed endpoint documentation
+- Code examples (Python, JavaScript, Node.js, cURL)
+- Error handling patterns
+- Automation examples (Discord bots, web scrapers, Telegram bots)
+- Performance tips and best practices
+
+## 🛠️ Local Development
+
 ```bash
-python auto_login.py
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export SEGA_ID="your_sega_id"
+export PASSWORD="your_password"
+
+# Run locally
+python app.py
 ```
 
-This will:
-- Open Edge browser
-- Navigate to MaiMai login page
-- Click SEGA ID button
-- Enter your credentials (already configured)
-- Check terms of service checkbox
-- Click Login
-- Save authentication cookies automatically
+## 🌐 Deploy to Render
 
-### Step 2: Fetch Player Data
+1. Fork this repository
+2. Create new Web Service on Render
+3. Connect your GitHub repository
+4. Set environment variables: `SEGA_ID` and `PASSWORD`
+5. Deploy!
 
-Run the data fetcher:
-```bash
-python get_player_data.py
+## 📊 Response Format
+
+```json
+{
+  "success": boolean,
+  "friend_code": "string",
+  "ign": "string",
+  "rating": "string",
+  "trophy": "string|null",
+  "icon_url": "string|null",
+  "error": "string (only if success=false)"
+}
 ```
 
-Enter any player's friend code when prompted (e.g., `101232330856982`)
+## 🔗 Endpoints
 
-## Files
+- `GET /` - API documentation
+- `GET /api/player/<friend_code>` - Get single player
+- `POST /api/batch` - Get multiple players (max 10)
+- `GET /health` - Health check
 
-- `auto_login.py` - Automated login script using Selenium
-- `get_player_data.py` - Main script to fetch player data
-- `cookies.json` - Stores authentication cookies (created automatically)
-- `README.md` - This file
+## 📝 License
 
-## Example Output
+MIT - Free to use for personal and commercial projects
 
-```
-=== Player Data ===
-Friend Code: 101232330856982
-Name: ＢＭＣ☆ＭＡＲＸ
-Rating: 15248
-```
+## 🙏 Credits
 
-## Notes
-
-- Cookies expire after some time. If authentication fails, re-run `auto_login.py`
-- The script uses your saved credentials for automatic login
-- All authentication is handled securely via session cookies
+Data from [MaiMai DX](https://maimaidx-eng.com) by SEGA
