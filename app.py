@@ -16,6 +16,10 @@ import time
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend access
 
+# Configure Flask to return proper UTF-8 without escaping Unicode
+app.config['JSON_AS_ASCII'] = False
+app.config['JSONIFY_MIMETYPE'] = 'application/json; charset=utf-8'
+
 # Configuration
 COOKIE_FILE = "cookies.json"
 SESSION_TIMEOUT = timedelta(hours=6)  # Re-login after 6 hours
