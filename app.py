@@ -271,19 +271,34 @@ def get_player_data(friend_code):
         trophy = trophy_element.text.strip() if trophy_element else None
         
         # Extract player avatar URL - ONLY get Icon/ images (actual profile pics)
-        icon_element = soup.find('img', src=lambda x: x and '/img/Icon/' in x)
+        # Debug: Find all img tags to see what we're working with
+        all_imgs = soup.find_all('img')
+        print(f"DEBUG: Found {len(all_imgs)} img tags:")
+        for i, img in enumerate(all_imgs[:5]):  # Show first 5
+            src = img.get('src', 'No src')
+            cls = img.get('class', [])
+            print(f"  IMG {i+1}: src={src}, class={cls}")
+        
+        # Look specifically for Icon URLs
+        icon_element = None
+        for img in all_imgs:
+            src = img.get('src', '')
+            if 'Icon/' in src and 'menu_' not in src:  # Avoid menu buttons
+                print(f"DEBUG: Found Icon image: {src}")
+                icon_element = img
+                break
+        
         icon_url = None
         if icon_element and icon_element.get('src'):
             src = icon_element.get('src')
-            # Verify it's actually an Icon/ URL
-            if '/img/Icon/' in src:
-                # Ensure full URL
-                if src.startswith('http'):
-                    icon_url = src
-                elif src.startswith('/'):
-                    icon_url = f"https://maimaidx-eng.com{src}"
-                else:
-                    icon_url = f"https://maimaidx-eng.com/maimai-mobile/{src}"
+            print(f"DEBUG: Selected avatar src: {src}")
+            # Ensure full URL
+            if src.startswith('http'):
+                icon_url = src
+            elif src.startswith('/'):
+                icon_url = f"https://maimaidx-eng.com{src}"
+            else:
+                icon_url = f"https://maimaidx-eng.com/maimai-mobile/{src}"
         
         if not player_name:
             return {
