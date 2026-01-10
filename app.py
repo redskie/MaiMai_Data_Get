@@ -270,22 +270,20 @@ def get_player_data(friend_code):
         trophy_element = soup.find('div', class_=lambda x: x and 'trophy_block' in x)
         trophy = trophy_element.text.strip() if trophy_element else None
         
-        # Extract player icon/avatar URL - handle multiple classes and different patterns
-        icon_element = (
-            soup.find('img', class_=lambda x: x and 'w_112' in x) or  # class="w_112 f_l"
-            soup.find('img', class_='w_112') or  # exact class
-            soup.find('img', src=lambda x: x and 'Icon/' in x)  # any img with Icon/ in src
-        )
+        # Extract player avatar URL - ONLY get Icon/ images (actual profile pics)
+        icon_element = soup.find('img', src=lambda x: x and '/img/Icon/' in x)
         icon_url = None
         if icon_element and icon_element.get('src'):
             src = icon_element.get('src')
-            # Ensure full URL
-            if src.startswith('http'):
-                icon_url = src
-            elif src.startswith('/'):
-                icon_url = f"https://maimaidx-eng.com{src}"
-            else:
-                icon_url = f"https://maimaidx-eng.com/maimai-mobile/{src}"
+            # Verify it's actually an Icon/ URL
+            if '/img/Icon/' in src:
+                # Ensure full URL
+                if src.startswith('http'):
+                    icon_url = src
+                elif src.startswith('/'):
+                    icon_url = f"https://maimaidx-eng.com{src}"
+                else:
+                    icon_url = f"https://maimaidx-eng.com/maimai-mobile/{src}"
         
         if not player_name:
             return {
